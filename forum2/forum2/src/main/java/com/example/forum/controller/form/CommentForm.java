@@ -12,6 +12,8 @@ public class CommentForm {
 
     private int id;
     private String comment;
+
+    @Column(name = "create_date",insertable = false, updatable = true)
     private int contentId;
 
     @Column(name = "create_date",insertable = false, updatable = false)

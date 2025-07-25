@@ -41,7 +41,7 @@ public class CommentService {
             comment.setContentId(result.getContentId());
             comment.setCreateDate(result.getCreateDate());
             comment.setUpdateDate(result.getUpdateDate());
-            comments.add(comment);
+                comments.add(comment);
         }
         return comments;
     }
@@ -57,19 +57,19 @@ public class CommentService {
     /*
      * コメント返信1件取得処理
      */
-//    public CommentForm editComment(Integer id) {
-//        List<Comment> results = new ArrayList<>();
-//        results.add((Comment) commentRepository.findById(id).orElse(null));
-//        List<CommentForm> comments = setCommentForm(results);
-//        return comments.get(0);
-//    }
+    public CommentForm editComment(Integer id) {
+        List<Comment> results = new ArrayList<>();
+        results.add((Comment) commentRepository.findById(id).orElse(null));
+        List<CommentForm> comments = setCommentForm(results);
+        return comments.get(0);
+    }
 
     /*
      * コメント削除（Entityに詰めなくてよい）
      */
-//    public void deleteComment(Integer id) {
-//        commentRepository.deleteById(id);
-//    }
+    public void deleteComment(Integer id) {
+        commentRepository.deleteById(id);
+    }
 
     /*
      * リクエストから取得した情報をEntityに設定

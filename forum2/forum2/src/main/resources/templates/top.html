@@ -9,6 +9,20 @@
 <div class="header-contents">
     <h1>匿名掲示板</h1>
 </div>
+<div>
+    <form th:method="get" action="./" th:object="${formModel}">
+        <div class="form-area">
+            <!--フォームの要素の見出しを表すタグ(label)-->
+            日付
+            <!-- nameがControllerに渡したい情報　valueが初期表示させたい情報 -->
+            <input type="date" name="start_date" th:value="${startDate}">
+            ～
+            <input type="date" name="end_date" th:value="${endDate}">
+            <!--タグで作成したフォームの中でテキスト入力欄やボタンなどの部品を作成する要素(input)-->
+            <input type="submit" value="絞り込み">
+        </div>
+    </form>
+</div>
 <div class="main-contents">
     <a href="/new">
         <button class="new-button" type="button">新規投稿</button>
@@ -20,9 +34,12 @@
         <div class="text">
             投稿 : <span th:text="${content.content}"/>
         </div>
+        <div class="text">
+            作成日時 : <span th:text="${content.createDate}"/>
+        </div>
         <div class="delete-button">
             <form th:action="@{/delete/{id}(id=${content.id})}" th:method="delete">
-            <input type="submit" value="削除">
+             <input type="submit" value="削除">
             </form>
         </div>
         <div class="edit-button">
@@ -37,29 +54,33 @@
                 <input type="hidden" name="contentId" th:value="${content.id}" />
                 <input type="submit" value="返信" />
             </div>
+        </form>
             <!--コメント返信表示処理-->
             <div class="message-icon" th:each="comment : ${comments}">
 
                <div th:if="${content.id == comment.contentId}">
-                <div>
-                    コメントID : <span th:text="${comment.id}"/>
-                </div>
-                <div class="text">
-                    コメント : <span th:text="${comment.comment}"/>
-                </div>
-<!--                <div class="delete-button">-->
-<!--                    <form th:action="@{/commentDelete/{id}(id=${comment.id})}" th:method="delete">-->
-<!--                        <input type="submit" value="削除">-->
-<!--                    </form>-->
-<!--                    <div class="edit-button">-->
-<!--                        <a th:href="@{/commentEdit/{id}(id=${content.id})}">-->
-<!--                            <input type="submit" value="編集">-->
-<!--                        </a>-->
-<!--                    </div>-->
-<!--                </div>-->
+                   <div>
+                        コメントID : <span th:text="${comment.id}"/>
+                   </div>
+                   <div class="text">
+                        コメント : <span th:text="${comment.comment}"/>
+                   </div>
+                   <div class="text">
+                       作成日時 : <span th:text="${comment.createDate}"/>
+                   </div>
+                   <div class="delete-button">
+                        <form th:action="@{/commentDelete/{id}(id=${comment.id})}" th:method="delete">
+                            <input type="submit" value="削除">
+                        </form>
+                   </div>
+                   <div class="edit-button">
+                        <a th:href="@{/commentEdit/{id}(id=${comment.id})}">
+                            <input type="submit" value="編集">
+                        </a>
+                   </div>
                </div>
             </div>
-        </form>
+
     </div>
 </div>
 </body>

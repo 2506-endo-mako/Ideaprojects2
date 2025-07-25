@@ -24,7 +24,7 @@ public class Comment {
     @Column
     private String comment;
 
-    @Column
+    @Column(name = "content_id",insertable = true, updatable = false)
     private int contentId;
 
     @Column(name = "create_date", insertable = false, updatable = false)
