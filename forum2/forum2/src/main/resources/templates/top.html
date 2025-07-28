@@ -50,6 +50,11 @@
         <!--コメント返信投稿-->
         <form method="post" action="/commentAdd" th:object="${formModel}">
             <div class="form-area">
+                <div class="errorMessages">
+                    <div th:if="${reportId == content.id}">
+                        <span th:text="${message}"/>
+                    </div>
+                </div>
                 <textarea class="comment-box" th:field="*{comment}" size="20" maxlength="200"/></textarea><br/>
                 <input type="hidden" name="contentId" th:value="${content.id}" />
                 <input type="submit" value="返信" />

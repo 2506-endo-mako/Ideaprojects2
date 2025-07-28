@@ -4,8 +4,13 @@ import com.example.forum.controller.form.CommentForm;
 import com.example.forum.controller.form.ReportForm;
 import com.example.forum.service.CommentService;
 import com.example.forum.service.ReportService;
+import io.micrometer.common.util.StringUtils;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -18,7 +23,8 @@ public class ForumController {
     ReportService reportService;
     @Autowired
     CommentService commentService;
-
+    @Autowired
+    HttpSession session;
 
     /*
      * 投稿内容表示処理
@@ -26,17 +32,24 @@ public class ForumController {
     @GetMapping
     //@RequestParam（name）型　変数　→　ブラウザからのリクエストの値（パラメータ）を取得することができるアノテーション。
     //デフォルトでは値の入力は必須なので、required=falseがないとエラーになる
-    public ModelAndView top(@RequestParam(name="start_date", required=false) String startDate,
-                            @RequestParam(name="end_date", required=false) String endDate) {
+    public ModelAndView top(@RequestParam(name = "start_date", required = false) String startDate,
+                            @RequestParam(name = "end_date", required = false) String endDate) {
         ModelAndView mav = new ModelAndView();
         // 投稿を全件取得
-        List<ReportForm> contentData = reportService.findAllReport(startDate,endDate);
+        List<ReportForm> contentData = reportService.findAllReport(startDate, endDate);
         // 画面遷移先を指定
         mav.setViewName("/top");
         // 投稿データオブジェクトを保管
-        mav.addObject("startDate",startDate);
-        mav.addObject("endDate",endDate);
+        mav.addObject("startDate", startDate);
+        mav.addObject("endDate", endDate);
         mav.addObject("contents", contentData);
+
+        Integer reportId2 = (Integer)session.getAttribute("reportId");
+        mav.addObject("reportId", reportId2);
+
+        String message2 = (String)session.getAttribute("message");
+        mav.addObject("message", message2);
+        session.invalidate();
 
         //コメント内容表示処理
         // 投稿を全件取得
@@ -61,6 +74,7 @@ public class ForumController {
         // 画面遷移先を指定
         mav.setViewName("/new");
         // 準備した空のFormを保管
+        //mav.addObject("message", message);
         mav.addObject("formModel", reportForm);
         return mav;
     }
@@ -99,7 +113,19 @@ public class ForumController {
      * 新規投稿処理
      */
     @PostMapping("/add")
-    public ModelAndView addContent(@ModelAttribute("formModel") ReportForm reportForm) {
+    public ModelAndView addContent(@ModelAttribute("formModel")
+                                   @Validated ReportForm reportForm, BindingResult result) {
+        if (result.hasErrors()) {
+            String message = null;
+            for (FieldError error : result.getFieldErrors()) {
+                message = error.getDefaultMessage();
+            }
+            ModelAndView mav = new ModelAndView();
+            mav.addObject("message", message);
+            mav.setViewName("/new");
+            return mav;
+        }
+
         // 投稿をテーブルに格納
         reportService.saveReport(reportForm);
         // rootへリダイレクト
@@ -110,7 +136,20 @@ public class ForumController {
      * コメント返信投稿処理
      */
     @PostMapping("/commentAdd")
-    public ModelAndView addComment(@ModelAttribute("formModel") CommentForm commentForm) {
+    public ModelAndView addComment(@Validated @ModelAttribute("formModel") CommentForm commentForm,
+                                   BindingResult result) {
+        if (result.hasErrors()) {
+            for (FieldError error : result.getFieldErrors()) {
+                String message = error.getDefaultMessage();
+
+                ModelAndView mav = new ModelAndView();
+                int reportId = commentForm.getContentId();
+                session.setAttribute("reportId", reportId);
+                session.setAttribute("message", message);
+                // rootへリダイレクト
+                return new ModelAndView("redirect:/");
+            }
+        }
         // 投稿をテーブルに格納
         commentService.saveComment(commentForm);
         // rootへリダイレクト
@@ -122,9 +161,9 @@ public class ForumController {
      */
     @DeleteMapping("/delete/{id}")
     public ModelAndView deleteContent(@PathVariable Integer id) {
-    // 投稿をテーブルに格納
+        // 投稿をテーブルに格納
         reportService.deleteReport(id);
-    // rootへリダイレクト
+        // rootへリダイレクト
         return new ModelAndView("redirect:/");
     }
 
@@ -144,7 +183,18 @@ public class ForumController {
      */
     @PutMapping("/update/{id}")
     public ModelAndView updateContent(@PathVariable Integer id,
-                                      @ModelAttribute("formModel") ReportForm report) {
+                                      @Validated @ModelAttribute("formModel") ReportForm report, BindingResult result) {
+        if (result.hasErrors()) {
+            for (FieldError error : result.getFieldErrors()) {
+                String message = error.getDefaultMessage();
+
+                ModelAndView mav = new ModelAndView();
+                mav.addObject("message", message);
+                // 画面遷移先を指定
+                mav.setViewName("/edit");
+                return mav;
+            }
+        }
         // UrlParameterのidを更新するentityにセット
         report.setId(id);
         // 編集した投稿を更新
@@ -158,7 +208,19 @@ public class ForumController {
      */
     @PutMapping("/commentUpdate/{id}")
     public ModelAndView updateCommennt(@PathVariable Integer id,
-                                      @ModelAttribute("formModel") CommentForm comment) {
+                                       @Validated @ModelAttribute("formModel") CommentForm comment, BindingResult result) {
+        if(result.hasErrors()) {
+            for(FieldError error : result.getFieldErrors()) {
+                String message = error.getDefaultMessage();
+
+                ModelAndView mav = new ModelAndView();
+                mav.addObject("message", message);
+                mav.setViewName("/commentEdit");
+                return mav;
+
+            }
+        }
+
         // UrlParameterのidを更新するentityにセット
         comment.setId(id);
         // 編集した投稿を更新
@@ -166,6 +228,5 @@ public class ForumController {
         // rootへリダイレクト
         return new ModelAndView("redirect:/");
     }
-
 }
 
